@@ -1,17 +1,23 @@
 'use strict';
 const { Pool } = require('pg');
 
-if (!process.env.DATABASE_URL) {
-  console.error('DATABASE_URL is required (Postgres connection string).');
-  process.exit(1);
-}
+let pool;
 
-const needSsl = /sslmode=require|neon\.tech|render\.com/.test(process.env.DATABASE_URL) && !/sslmode=disable/.test(process.env.DATABASE_URL);
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: needSsl ? { rejectUnauthorized: false } : undefined,
-  max: 5,
-});
+function getPool() {
+  if (pool) return pool;
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error('DATABASE_URL is required (Postgres connection string).');
+  const needSsl = /sslmode=require|neon\.tech|render\.com/.test(url) && !/sslmode=disable/.test(url);
+  const serverless = Boolean(process.env.VERCEL);
+  pool = new Pool({
+    connectionString: url,
+    ssl: needSsl ? { rejectUnauthorized: false } : undefined,
+    max: serverless ? 1 : 5,
+    idleTimeoutMillis: serverless ? 5000 : 30000,
+    connectionTimeoutMillis: 10000,
+  });
+  return pool;
+}
 
 const MIGRATIONS = [
   `CREATE TABLE IF NOT EXISTS settings (
@@ -91,7 +97,11 @@ const MIGRATIONS = [
 ];
 
 async function migrate() {
-  for (const sql of MIGRATIONS) await pool.query(sql);
+  for (const sql of MIGRATIONS) await getPool().query(sql);
 }
 
-module.exports = { pool, query: (t, p) => pool.query(t, p), migrate };
+module.exports = {
+  get pool() { return getPool(); },
+  query: (t, p) => getPool().query(t, p),
+  migrate,
+};

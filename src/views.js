@@ -31,7 +31,7 @@ const CAT_ICONS = {
 };
 const DEFAULT_ICON = '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12h8M12 8v8"/></svg>';
 
-function layout(ctx, { title, body, bodyClass = '', buyBar = '', noindex = false }) {
+function layout(ctx, { title, body, bodyClass = '', buyBar = '', noindex = false, scripts = '' }) {
   const s = ctx.s; const rate = ctx.rate;
   const shop = esc(s.shop_name || 'JapanHiu');
   const rateTxt = rate ? `1 เยน ≈ ${rate.effective.toFixed(3)} บาท` : '';
@@ -66,6 +66,7 @@ function layout(ctx, { title, body, bodyClass = '', buyBar = '', noindex = false
   ${footer(ctx)}
   ${buyBar}
   <a class="line-fab" href="${esc(lineUrl(s.line_id))}" target="_blank" rel="noopener" title="ทัก LINE" aria-label="ทัก LINE">${LINE_SVG_FAB}</a>
+  ${scripts}
 </body>
 </html>`;
 }
@@ -332,13 +333,13 @@ function orderForm(ctx, { item, q, src, id, w, values = {}, error }) {
           ${s.promptpay ? `<div>พร้อมเพย์: <strong>${esc(s.promptpay)}</strong></div>` : ''}` : '<div>ร้านจะแจ้งเลขบัญชีทาง LINE หลังยืนยันสต็อก</div>'}
           <div class="small">ยอดโอน <strong>${thb(q.total_thb)}</strong> (ยอดประมาณการ หากค่าส่งจริงต่ำกว่าจะคืนส่วนต่าง) แนะนำให้รอร้านยืนยันสต็อกก่อนโอน หรือแนบสลิปภายหลังได้ที่หน้าติดตามคำสั่งซื้อ</div>
         </div>
-        <label>แนบสลิป (ไม่บังคับ, รูปภาพหรือ PDF ไม่เกิน 5 MB)<input type="file" name="slip" accept="image/*,application/pdf" /></label>
+        <label>แนบสลิป (ไม่บังคับ, รูปภาพหรือ PDF ไม่เกิน 3.5 MB — รูปจากมือถือจะถูกย่อให้อัตโนมัติ)<input type="file" name="slip" accept="image/*,application/pdf" /></label>
         <label class="check"><input type="checkbox" name="agree" value="1" required /> ฉันอ่านและยอมรับ <a href="/terms" target="_blank">เงื่อนไขการให้บริการ</a></label>
         <button class="btn" type="submit">ยืนยันสั่งซื้อ</button>
       </form>
     </div>
   </div>`;
-  return layout(ctx, { title: 'สั่งซื้อ', body, noindex: true });
+  return layout(ctx, { title: 'สั่งซื้อ', body, noindex: true, scripts: '<script src="/slip.js" defer></script>' });
 }
 
 function orderDone(ctx, { order }) {
@@ -381,11 +382,11 @@ function track(ctx, { order, events = [], error, no = '', phone = '', uploaded }
       ${order.status === 'รอชำระเงิน' ? `
       <form method="post" action="/track/slip" enctype="multipart/form-data" class="form">
         <input type="hidden" name="no" value="${esc(no)}" /><input type="hidden" name="phone" value="${esc(phone)}" />
-        <label>แนบสลิปโอนเงิน<input type="file" name="slip" accept="image/*,application/pdf" required /></label>
+        <label>แนบสลิปโอนเงิน (รูปภาพหรือ PDF ไม่เกิน 3.5 MB — รูปจากมือถือจะถูกย่อให้อัตโนมัติ)<input type="file" name="slip" accept="image/*,application/pdf" required /></label>
         <button class="btn" type="submit">ส่งสลิป</button>
       </form>` : ''}` : ''}
   </div></div>`;
-  return layout(ctx, { title: 'ติดตามคำสั่งซื้อ', body, noindex: true });
+  return layout(ctx, { title: 'ติดตามคำสั่งซื้อ', body, noindex: true, scripts: '<script src="/slip.js" defer></script>' });
 }
 
 function terms(ctx) {

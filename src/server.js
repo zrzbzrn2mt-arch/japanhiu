@@ -22,13 +22,30 @@ app.set('trust proxy', 1);
 app.use(express.urlencoded({ extended: false, limit: '200kb' }));
 app.use(express.static(path.join(__dirname, '..', 'public'), { maxAge: '1d' }));
 
+// Vercel Hobby request bodies cap at ~4.5 MB; stay under that with room for form fields.
+const SLIP_MAX_BYTES = Math.floor(3.5 * 1024 * 1024);
+const SLIP_TOO_LARGE = 'ไฟล์สลิปใหญ่เกิน 3.5 MB กรุณาถ่ายใหม่หรือย่อรูปแล้วลองอีกครั้ง (รูปจากมือถือจะถูกย่อให้อัตโนมัติ) <a href="javascript:history.back()">กลับ</a>';
+
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024, files: 1 },
+  limits: { fileSize: SLIP_MAX_BYTES, files: 1 },
   fileFilter: (req, file, cb) => cb(null, /^image\/(jpeg|png|webp|heic|heif|gif)$|^application\/pdf$/.test(file.mimetype)),
 });
 
 const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+
+// Idempotent schema setup: once per process (local boot, or first request on serverless).
+let migratePromise;
+function ensureMigrated() {
+  if (!migratePromise) {
+    migratePromise = db.migrate().catch((e) => {
+      migratePromise = null;
+      throw e;
+    });
+  }
+  return migratePromise;
+}
+app.use(wrap(async (req, res, next) => { await ensureMigrated(); next(); }));
 
 async function ctx() {
   const [s, rate] = await Promise.all([settings.getAll(), pricing.getRate()]);
@@ -440,11 +457,15 @@ app.post('/admin/settings', wrap(async (req, res) => {
 app.use(wrap(async (req, res) => res.status(404).send(V.errorPage(await ctx(), {}))));
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
-  if (err instanceof multer.MulterError) return res.status(400).send('ไฟล์ใหญ่เกิน 5 MB หรือไม่ถูกต้อง <a href="javascript:history.back()">กลับ</a>');
+  if (err instanceof multer.MulterError) return res.status(400).send(err.code === 'LIMIT_FILE_SIZE' ? SLIP_TOO_LARGE : 'ไฟล์สลิปไม่ถูกต้อง กรุณาใช้รูปภาพหรือ PDF ไม่เกิน 3.5 MB <a href="javascript:history.back()">กลับ</a>');
   console.error(err);
   res.status(500).send('เกิดข้อผิดพลาด กรุณาลองใหม่ หรือทัก LINE');
 });
 
-db.migrate().then(() => {
-  app.listen(PORT, () => console.log(`JapanHiu listening on http://localhost:${PORT}`));
-}).catch((e) => { console.error('migration failed', e); process.exit(1); });
+module.exports = app;
+
+if (require.main === module) {
+  ensureMigrated().then(() => {
+    app.listen(PORT, () => console.log(`JapanHiu listening on http://localhost:${PORT}`));
+  }).catch((e) => { console.error('migration failed', e); process.exit(1); });
+}
