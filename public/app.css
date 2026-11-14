@@ -92,8 +92,8 @@ body.admin { background: var(--paper); }
 .tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
 .tbl th { text-align: left; font-weight: 600; background: #faf8f6; padding: 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
 .tbl td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
-.tbl td.it { display: flex; gap: 10px; align-items: center; min-width: 240px; }
-.tbl td.it img { width: 48px; height: 48px; object-fit: cover; border-radius: 8px; flex-shrink: 0; }
+.tbl .it { display: flex; gap: 10px; align-items: center; min-width: 240px; }
+.tbl .it img { width: 48px; height: 48px; object-fit: cover; border-radius: 8px; flex-shrink: 0; }
 .tbl td.url { max-width: 280px; word-break: break-all; font-size: 13px; }
 .tbl a { color: var(--red); }
 .tbl tr.muted { opacity: .5; }
@@ -123,3 +123,6 @@ body.admin { background: var(--paper); }
 }
 body { font-family: "Prompt", "Noto Sans Thai", "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif; }
 .jp-original, .mini-item .small { font-family: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", "Prompt", sans-serif; }
+.tbl td.nw { white-space: nowrap; }
+.admin .logo-text .name { white-space: nowrap; }
+@media (max-width: 600px) { .admin .header-inner { flex-wrap: wrap; } .admin-nav { gap: 10px; font-size: 13px; } }

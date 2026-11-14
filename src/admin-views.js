@@ -48,8 +48,8 @@ function orders({ rows, status, counts }) {
   ${rows.length ? `<div class="table-wrap"><table class="tbl">
     <thead><tr><th>เลขที่</th><th>สินค้า</th><th>ลูกค้า</th><th>ยอด</th><th>สถานะ</th><th>สลิป</th><th>วันที่</th></tr></thead>
     <tbody>${rows.map((o) => `<tr>
-      <td><a href="/admin/orders/${o.id}"><strong>${esc(o.order_no)}</strong></a></td>
-      <td class="it">${o.image_url ? `<img src="${esc(o.image_url)}" alt="" referrerpolicy="no-referrer" />` : ''}<span>${esc(o.title_th || o.title_jp)}</span></td>
+      <td class="nw"><a href="/admin/orders/${o.id}"><strong>${esc(o.order_no)}</strong></a></td>
+      <td><div class="it">${o.image_url ? `<img src="${esc(o.image_url)}" alt="" referrerpolicy="no-referrer" />` : ''}<span>${esc(o.title_th || o.title_jp)}</span></div></td>
       <td>${esc(o.customer_name)}<br /><small>${esc(o.phone)}</small></td>
       <td>${thb(o.total_thb)}<br /><small>${jpy(o.price_jpy)}</small></td>
       <td>${statusPill(o.status)}</td>
@@ -133,7 +133,7 @@ function featuredList({ rows, flash }) {
   </div>
   ${rows.length ? `<div class="table-wrap"><table class="tbl"><thead><tr><th>สินค้า</th><th>หมวด</th><th>ราคา</th><th>สถานะ</th><th></th></tr></thead><tbody>
   ${rows.map((r) => `<tr>
-    <td class="it">${r.image_url ? `<img src="${esc(r.image_url)}" alt="" referrerpolicy="no-referrer" />` : ''}<span><a href="/admin/featured/${r.id}">${esc(r.title_th)}</a><br /><small>${esc(r.mercari_id || '')}</small></span></td>
+    <td><div class="it">${r.image_url ? `<img src="${esc(r.image_url)}" alt="" referrerpolicy="no-referrer" />` : ''}<span><a href="/admin/featured/${r.id}">${esc(r.title_th)}</a><br /><small>${esc(r.mercari_id || '')}</small></span></div></td>
     <td>${esc(r.category || '-')}</td><td>${jpy(r.price_jpy)}</td>
     <td><span class="pill ${r.status === 'published' ? 's1' : r.status === 'sold' ? 's6' : ''}">${{ published: 'เผยแพร่', draft: 'ฉบับร่าง', sold: 'ขายแล้ว' }[r.status] || esc(r.status)}</span></td>
     <td class="row-actions">
