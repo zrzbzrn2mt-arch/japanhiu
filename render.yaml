@@ -1,0 +1,21 @@
+# Render Blueprint: free web service. Database = Neon free Postgres (recommended) or any Postgres URL.
+services:
+  - type: web
+    name: japanhiu
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_URL
+        sync: false        # paste the Neon connection string in the Render dashboard
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: ZENROWS_API_KEY
+        sync: false
